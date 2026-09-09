@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardium Dev — Ghost, Minecraft Server Developer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+  :root{
+    --void:#070c13;
+    --panel:#0d1a25;
+    --panel-raised:#142534;
+    --line:#20394a;
+    --diamond:#7fe9f2;
+    --diamond-deep:#2c98ac;
+    --ember:#ffb173;
+    --ink:#e9f5f7;
+    --ink-muted:#8fa9b6;
+    --step: 14px;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+
+  body{
+    margin:0;
+    background:var(--void);
+    color:var(--ink);
+    font-family:'Inter', system-ui, sans-serif;
+    font-size:16px;
+    line-height:1.6;
+  }
+
+  a{ color:inherit; }
+
+  .wrap{
+    max-width:1120px;
+    margin:0 auto;
+    padding:0 32px;
+  }
+
+  h1,h2,h3{
+    font-family:'Space Grotesk', 'Inter', sans-serif;
+    font-weight:700;
+    line-height:1.15;
+    margin:0;
+  }
+
+  .pixel{
+    font-family:'Press Start 2P', monospace;
+  }
+
+  /* ---------- staircase / voxel framing ---------- */
+  .step-frame{
+    position:relative;
+    clip-path: polygon(
+      0 0, 100% 0, 100% calc(100% - var(--step)*2),
+      calc(100% - var(--step)) calc(100% - var(--step)*2),
+      calc(100% - var(--step)) calc(100% - var(--step)),
+      calc(100% - var(--step)*2) calc(100% - var(--step)),
+      calc(100% - var(--step)*2) 100%,
+      0 100%
+    );
+  }
+  .step-frame img{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .step-frame::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    box-shadow: inset 0 0 0 2px rgba(127,233,242,.35);
+    pointer-events:none;
+    clip-path: inherit;
+  }
+
+  /* ---------- nav ---------- */
+  header{
+    position:fixed;
+    top:0; left:0; right:0;
+    z-index:50;
+    background:rgba(7,12,19,.82);
+    backdrop-filter: blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  nav{
+    max-width:1120px;
+    margin:0 auto;
+    padding:18px 32px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .logo{
+    font-size:13px;
+    letter-spacing:.5px;
+    color:var(--diamond);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    text-decoration:none;
+  }
+  .logo svg{ flex:none; }
+  .navlinks{
+    display:flex;
+    gap:30px;
+    list-style:none;
+    margin:0; padding:0;
+  }
+  .navlinks a{
+    font-size:14.5px;
+    font-weight:500;
+    text-decoration:none;
+    color:var(--ink-muted);
+    transition:color .15s ease;
+  }
+  .navlinks a:hover{ color:var(--ink); }
+  .nav-cta{
+    font-size:14px;
+    font-weight:600;
+    color:var(--void) !important;
+    background:var(--diamond);
+    padding:9px 18px;
+    border-radius:2px;
+    text-decoration:none;
+    white-space:nowrap;
+  }
+  .nav-toggle{ display:none; }
+
+  /* ---------- hero ---------- */
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:flex;
+    align-items:flex-end;
+    background:#03070c;
+    overflow:hidden;
+  }
+  .hero img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    opacity:.55;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(0deg, rgba(3,7,12,.97) 5%, rgba(3,7,12,.55) 45%, rgba(3,7,12,.35) 100%);
+  }
+  .hero-inner{
+    position:relative;
+    padding:0 32px 90px;
+    max-width:1120px;
+    margin:0 auto;
+    width:100%;
+  }
+  .kicker{
+    color:var(--diamond);
+    font-size:14.5px;
+    font-weight:600;
+    margin-bottom:18px;
+  }
+  .hero h1{
+    font-size:clamp(38px, 6vw, 68px);
+    max-width:780px;
+    color:var(--ink);
+  }
+  .hero h1 .accent{ color:var(--diamond); }
+  .hero p{
+    max-width:520px;
+    color:var(--ink-muted);
+    font-size:17px;
+    margin-top:22px;
+  }
+  .hero-actions{
+    margin-top:34px;
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .btn{
+    display:inline-block;
+    padding:14px 26px;
+    font-size:15px;
+    font-weight:600;
+    text-decoration:none;
+    border-radius:2px;
+    border:1px solid transparent;
+  }
+  .btn-primary{
+    background:var(--ember);
+    color:#241205;
+  }
+  .btn-ghost{
+    border-color:var(--line);
+    color:var(--ink);
+  }
+  .scroll-cue{
+    position:absolute;
+    right:32px;
+    bottom:32px;
+    color:var(--ink-muted);
+    font-size:12.5px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    writing-mode:vertical-rl;
+  }
+  .scroll-cue::after{
+    content:"";
+    width:1px; height:36px;
+    background:var(--line);
+  }
+
+  /* ---------- generic section ---------- */
+  section{ padding:120px 0; }
+  .section-head{
+    max-width:640px;
+    margin-bottom:56px;
+  }
+  .section-head h2{
+    font-size:clamp(28px, 3.4vw, 38px);
+  }
+  .section-head p{
+    color:var(--ink-muted);
+    margin-top:16px;
+    font-size:16.5px;
+  }
+  .no-pt{ padding-top:0; }
+
+  /* ---------- about ---------- */
+  .about{
+    display:grid;
+    grid-template-columns:1.1fr .9fr;
+    gap:64px;
+    align-items:center;
+  }
+  .about-copy p{ color:var(--ink-muted); margin:0 0 16px; }
+  .about-copy p:last-child{ margin-bottom:0; }
+  .about-copy strong{ color:var(--ink); font-weight:600; }
+  .about-figure{
+    aspect-ratio:4/3;
+    background:var(--panel);
+  }
+  .stat-row{
+    display:flex;
+    gap:36px;
+    margin-top:34px;
+    flex-wrap:wrap;
+  }
+  .stat b{
+    display:block;
+    font-family:'Space Grotesk',sans-serif;
+    font-size:26px;
+    color:var(--diamond);
+  }
+  .stat span{
+    font-size:13.5px;
+    color:var(--ink-muted);
+  }
+
+  /* ---------- work / build log ---------- */
+  .build{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:56px;
+    align-items:center;
+    padding:56px 0;
+    border-top:1px solid var(--line);
+  }
+  .build:last-child{ border-bottom:1px solid var(--line); }
+  .build.flip .build-figure{ order:2; }
+  .build.flip .build-copy{ order:1; }
+  .build-figure{ aspect-ratio:16/11; background:var(--panel); }
+  .build-tag{
+    color:var(--diamond-deep);
+    font-size:13.5px;
+    font-weight:600;
+    margin-bottom:10px;
+  }
+  .build-copy h3{ font-size:23px; margin-bottom:14px; }
+  .build-copy p{ color:var(--ink-muted); margin:0 0 16px; }
+  .build-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:18px;
+  }
+  .build-meta span{
+    font-size:12.5px;
+    color:var(--ink-muted);
+    border:1px solid var(--line);
+    padding:5px 11px;
+    border-radius:2px;
+  }
+
+  /* ---------- services ---------- */
+  .services-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  .service{
+    background:var(--void);
+    padding:38px;
+  }
+  .service h3{
+    font-size:19px;
+    margin-bottom:10px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .service h3 .mark{
+    width:9px; height:9px;
+    background:var(--diamond);
+    flex:none;
+  }
+  .service p{ color:var(--ink-muted); font-size:15px; margin:0; }
+
+  /* ---------- reviews ---------- */
+  .reviews-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:28px;
+  }
+  .review-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:22px;
+  }
+  .review-card img{
+    width:100%;
+    display:block;
+    border-radius:3px;
+  }
+  .review-card p{
+    margin-top:16px;
+    color:var(--ink-muted);
+    font-size:14px;
+  }
+
+  /* ---------- contact band ---------- */
+  .contact-band{
+    background:var(--panel);
+    border-top:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+    text-align:left;
+    position:relative;
+    overflow:hidden;
+  }
+  .contact-band::before{
+    content:"";
+    position:absolute;
+    right:-120px; top:-120px;
+    width:340px; height:340px;
+    background:radial-gradient(circle, rgba(127,233,242,.16), transparent 70%);
+  }
+  .contact-inner{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:40px;
+    flex-wrap:wrap;
+  }
+  .contact-inner h2{ font-size:clamp(26px,3.2vw,36px); max-width:480px; }
+  .contact-inner p{ color:var(--ink-muted); margin-top:12px; max-width:440px; }
+
+  footer{
+    padding:40px 0 60px;
+  }
+  .footer-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:16px;
+    color:var(--ink-muted);
+    font-size:13.5px;
+    border-top:1px solid var(--line);
+    padding-top:28px;
+  }
+
+  @media (max-width: 860px){
+    .navlinks{ display:none; }
+    .about{ grid-template-columns:1fr; }
+    .build{ grid-template-columns:1fr; gap:24px; }
+    .build.flip .build-figure{ order:0; }
+    .build.flip .build-copy{ order:0; }
+    .services-grid{ grid-template-columns:1fr; }
+    .reviews-grid{ grid-template-columns:1fr; }
+    section{ padding:80px 0; }
+    :root{ --step:9px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    html{ scroll-behavior:auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="wrap">
+    <a href="#top" class="logo pixel">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 0L18 9L9 18L0 9L9 0Z" fill="#7fe9f2"/></svg>
+      GUARDIUM
+    </a>
+    <ul class="navlinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#work">Builds</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#reviews">Reviews</a></li>
+    </ul>
+    <a href="https://discord.gg/DFn5aNkKsT" target="_blank" rel="noopener" class="nav-cta">Create a ticket</a>
+  </nav>
+</header>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero" style="padding:0;">
+    <img src="assets/screenshot-landscape.jpg" alt="Custom-built Minecraft RPG server landscape">
+    <div class="hero-inner">
+      <div class="kicker">Minecraft Server Developer · Plugin Development &amp; Configuration</div>
+      <h1>Building immersive worlds, one <span class="accent">plugin</span> at a time.</h1>
+      <p>I'm Ghost. I design and build custom plugins, RPG systems, and server configurations for Minecraft servers that want to feel like nothing else on the network.</p>
+      <div class="hero-actions">
+        <a href="https://discord.gg/DFn5aNkKsT" target="_blank" rel="noopener" class="btn btn-primary">Create a ticket</a>
+        <a href="#work" class="btn btn-ghost">See the builds</a>
+      </div>
+    </div>
+    <div class="scroll-cue">scroll</div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="about">
+    <div class="wrap about">
+      <div class="about-copy">
+        <div class="section-head" style="margin-bottom:24px;">
+          <h2>About Ghost</h2>
+        </div>
+        <p>I turn ideas into fully functional, immersive Minecraft experiences. My work centers on <strong>custom plugin development</strong>, <strong>server configuration</strong>, and <strong>original RPG systems</strong> built to fit whatever a server's vision actually is, rather than bolted on from a template.</p>
+        <p>That covers permissions, economy features, gameplay mechanics, and performance tuning, whether I'm writing a plugin from a blank file or fine-tuning a setup that's already live.</p>
+        <p>The goal stays the same either way: systems that are reliable, scalable, and genuinely fun to play with the kind of feature that makes a server stand out.</p>
+        <div class="stat-row">
+          <div class="stat"><b>7</b><span>Guardium profession ranks shipped</span></div>
+          <div class="stat"><b>48</b><span>custom accessory trinkets supported</span></div>
+          <div class="stat"><b>5★</b><span>average client rating</span></div>
+        </div>
+      </div>
+      <div class="about-figure step-frame">
+        <img src="assets/hero-workspace.jpg" alt="Illustration of a developer working at a desk surrounded by Minecraft-themed gear">
+      </div>
+    </div>
+  </section>
+
+  <!-- WORK -->
+  <section id="work" class="no-pt">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Builds &amp; systems</h2>
+        <p>A look at the plugins and RPG systems developed for Guardium and client servers from the accessory system players wear every day to the smithing minigame that decides whether their gear survives it.</p>
+      </div>
+
+      <div class="build">
+        <div class="build-figure step-frame">
+          <img src="assets/custom-server.jpg" alt="Custom RPG Minecraft server town square with fountain and builds">
+        </div>
+        <div class="build-copy">
+          <div class="build-tag">Custom server</div>
+          <h3>Guardium — a custom RPG world</h3>
+          <p>A full custom RPG Minecraft server built to deliver an immersive, original adventure. Every plugin featured here was developed specifically for it, with the ideas and direction inspired by Guardium MC and pushed further into new territory.</p>
+          <div class="build-meta"><span>In development</span><span>Launching soon</span></div>
+        </div>
+      </div>
+
+      <div class="build flip">
+        <div class="build-figure step-frame">
+          <img src="assets/gallery-scene.jpg" alt="Minecraft characters using custom accessories and gear">
+        </div>
+        <div class="build-copy">
+          <div class="build-tag">Custom RPG accessory plugin</div>
+          <h3>Guardium Accessories</h3>
+          <p>An accessory system with two ring slots, two necklace slots, and a charm slot, all managed through a custom <code>/baubles</code> GUI. Smart equipping and persistent storage keep gear where players left it, and stat modifiers tie directly into the Character Stats plugin.</p>
+          <div class="build-meta"><span>48 custom trinkets</span><span>Persistent stats</span></div>
+        </div>
+      </div>
+
+      <div class="build">
+        <div class="build-figure step-frame">
+          <img src="assets/banner-plugins.jpg" alt="Stylized Minecraft banner artwork for plugins and services">
+        </div>
+        <div class="build-copy">
+          <div class="build-tag">Skill-based profession system</div>
+          <h3>Guardium Professions</h3>
+          <p>Smithing runs on a custom Minesweeper minigame, where how well a player plays affects the item's improvement and their Forge Score. Seven profession ranks, progression trials, and configurable difficulty give players a real skill ceiling to climb.</p>
+          <div class="build-meta"><span>7 ranks</span><span>Progression trials</span></div>
+        </div>
+      </div>
+
+      <div class="build flip">
+        <div class="build-figure step-frame">
+          <img src="assets/hero-workspace.jpg" alt="Developer workspace illustration">
+        </div>
+        <div class="build-copy">
+          <div class="build-tag">Custom forge GUI</div>
+          <h3>Guardium Smithing Forge</h3>
+          <p>The GUI players use to place and improve eligible weapons. Persistent item IDs and SQLite storage back every session, with item-safety logic built in specifically to stop duplication or loss if someone disconnects or the server crashes mid-session.</p>
+          <div class="build-meta"><span>SQLite storage</span><span>Crash-safe</span></div>
+        </div>
+      </div>
+
+      <div class="build">
+        <div class="build-figure step-frame">
+          <img src="assets/banner-guardium.jpg" alt="Guardium Dev branded banner artwork">
+        </div>
+        <div class="build-copy">
+          <div class="build-tag">Minesweeper system</div>
+          <h3>Guardium Minesweeper Engine</h3>
+          <p>A procedural Minesweeper engine built from scratch: first-click safety, solver-verified boards, multiple difficulties, larger GUI layouts, flagging, win detection, and promotion challenges that feed back into the profession system above.</p>
+          <div class="build-meta"><span>Solver-verified boards</span><span>Multiple difficulties</span></div>
+        </div>
+      </div>
+
+      <div class="build flip">
+        <div class="build-figure step-frame">
+          <img src="assets/gallery-scene.jpg" alt="Minecraft players viewing custom interfaces">
+        </div>
+        <div class="build-copy">
+          <div class="build-tag">Custom player interface</div>
+          <h3>Player Menu &amp; Character Stats</h3>
+          <p>A single interface for accessing server systems and viewing live RPG stats such as health, mana, stamina, damage, armor, movement speed, regeneration, and cooldown reduction so players always know exactly what their build is doing.</p>
+          <div class="build-meta"><span>Live stat tracking</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- SERVICES -->
+  <section id="services">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Services</h2>
+        <p>Everything a server needs to go from an idea to something players stick around for.</p>
+      </div>
+      <div class="services-grid">
+        <div class="service">
+          <h3><span class="mark"></span>Plugin development</h3>
+          <p>Custom plugins built from scratch around a server's specific mechanics — economy, RPG systems, minigames, and anything in between.</p>
+        </div>
+        <div class="service">
+          <h3><span class="mark"></span>Server setup</h3>
+          <p>Getting a server running on solid footing: configuration, permissions, and performance tuning done right the first time.</p>
+        </div>
+        <div class="service">
+          <h3><span class="mark"></span>Custom configurations</h3>
+          <p>Fine-tuning an existing setup so it fits the server's vision instead of forcing the server to fit a template.</p>
+        </div>
+        <div class="service">
+          <h3><span class="mark"></span>Community management</h3>
+          <p>Ongoing support to keep systems running smoothly and a community that stays engaged with what's shipped.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REVIEWS -->
+  <section id="reviews">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>What clients say</h2>
+      </div>
+      <div class="reviews-grid">
+        <div class="review-card">
+          <img src="assets/review-2.png" alt="Client review message thanking Ghost for their reliability and speed">
+        </div>
+        <div class="review-card">
+          <img src="assets/review-1.png" alt="Five-star client review recommending Ghost's work">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact">
+    <div class="wrap contact-band" style="padding:64px 48px; margin:0 32px; max-width:1056px;">
+      <div class="contact-inner">
+        <div>
+          <h2>Got a server that needs work?</h2>
+          <p>Open a ticket and tell me what you're building - plugin, server setup, or a full custom RPG system.</p>
+        </div>
+        <a href="https://discord.gg/DFn5aNkKsT" target="_blank" rel="noopener" class="btn btn-primary">Create a ticket</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap footer-row">
+    <span class="pixel" style="font-size:11px; color:var(--diamond);">GUARDIUM DEV</span>
+    <span>Minecraft Server Developer — Plugin Development &amp; Configuration</span>
+  </div>
+</footer>
+
+</body>
+</html>
